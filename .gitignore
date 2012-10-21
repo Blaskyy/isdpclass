@@ -1,3 +1,5 @@
 #Complied source
-*.o
+*
+!*.c
+!Makefile
 
