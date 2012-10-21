@@ -2,4 +2,4 @@
 *
 !*.c
 !Makefile
-
+!README.md
