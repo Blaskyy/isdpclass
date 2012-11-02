@@ -1,126 +1,184 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  tcpserver.c
+ *
+ *    Description:  this program is demostrate to how to write a remote control server
+ *
+ *        Version:  1.0
+ *        Created:  2010年09月11日 21时28分21秒
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Gang Liang (cs.scu.edu.cn/~lianggang), lianggang@scu.edu.cn
+ *        Company:  Sichuan university
+ *
+ * =====================================================================================
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <netdb.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+#include <sys/types.h>
 
-#define PORT 8964
-#define MAX_SIZE 2048
 
-int execute(char *command, char *buf)
+#define PORT 8900
+#define BUFSIZE 2048
+
+int execute(char*command,char*buf)
 {
 	FILE *fp;
 	int count;
+	char commandbuf[2056];
 
-	if (command == NULL || buf == NULL) {
-		printf("error\n");
-		exit(-1);
+	
+	if ((NULL==command)||(NULL==buf))
+	{
+		perror("command or buf is empty\n");
+		return -1;
 	}
 
-	if ((fp = popen(command, "r")) == NULL) {
-		printf("creating pipe error\n");
-		exit(-1);
+
+	count =0;
+	memset(commandbuf,0,2056);
+	strcat(commandbuf,"sh -c ");
+	strcat(commandbuf,command);
+	fprintf(stderr,"the command is %s\n",commandbuf);
+
+	if (NULL==(fp=popen(commandbuf,"r")))
+	{
+		perror("create pipe error\n");
+		return -1;
 	}
 
-	count = 0;
-
-	while (((buf[count] = fgetc(fp)) != EOF) && (count < 2047)) {
-		count++;
-	}
-	buf[count] = '\0';
-
-	pclose(fp);
+	while ((count<2047) && (EOF!=(buf[count++]=fgetc(fp))));
+	buf[count-1]='\0';
+		
 	return count;
+
 }
 
-int main(int argc, char **argv)
+int main()
 {
-	struct sockaddr_in server;
-	struct sockaddr_in client;
-	int listend;
-	int connectd;
-	int port;
+	int sockfd;
+	int conn_sock;
+	char sendbuf[BUFSIZE];
+	char recvbuf[BUFSIZE];
 	int sendnum;
 	int recvnum;
+	int length;
+	struct sockaddr_in client;
+	struct sockaddr_in server;
 	int opt;
-	int len;
-	char send_buf[MAX_SIZE];
-	char recv_buf[MAX_SIZE];
-	char cmd[2088];
+	int cnt;
 
-	port = PORT;
+    /* The first stage:INITILIZE  */
+	memset(&client,0,sizeof(client));
+	memset(&server,0,sizeof(server));
+	memset(sendbuf,0,BUFSIZE);
+	memset(recvbuf,0,BUFSIZE);
+	length=0;
+	sockfd=-1;
+	conn_sock=-1;
+	opt=SO_REUSEADDR;
 
-	memset(send_buf, 0, MAX_SIZE);
-	memset(recv_buf, 0, MAX_SIZE);
-
-	opt = SO_REUSEADDR;
-
-	if ((listend = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		printf("create listen socket error\n");
-		exit(-1);
+	/*The second stage:create listen socket  */
+	if (-1==(sockfd=socket(AF_INET,SOCK_STREAM,0)))
+	{
+		perror("create socket error\n");
+		return -1;
+	
 	}
-	setsockopt(listend, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	
+	setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
 
-	memset(&server, 0, sizeof(server));
-	server.sin_family = AF_INET;
-	server.sin_addr.s_addr = htonl(INADDR_ANY);
-	server.sin_port = htons(port);
-	if (bind
-	    (listend, (struct sockaddr *) &server,
-	     sizeof(struct sockaddr)) < 0) {
-		printf("bind error\n");
-		exit(-1);
+	/* The third stage:bind socket */
+	server.sin_family=AF_INET;
+	server.sin_addr.s_addr=htonl(INADDR_ANY);
+	server.sin_port=htons(PORT);
+
+	if (-1==bind(sockfd,(struct sockaddr*)&server,sizeof(server)))
+	{
+		perror("bind socket error\n");
+		close(sockfd);
+		return -1;
+	
 	}
 
-	if (listen(listend, 5) < 0) {
-		printf("listen error\n");
-		exit(-1);
+	/* The fourth stage:listen socket */
+	if (-1==listen(sockfd,10))
+	{
+		perror("listen socket error\n");
+		close(sockfd);
+		return -1;
 	}
 
-	while (1) {
-		if ((connectd =
-		     accept(listend, (struct sockaddr *) &client,
-			    &len)) < 0) {
-			printf("create connect socket error\n");
-			continue;
+	/* The fifth stage:creat connect socket */
+
+	while(1)
+	{
+		if (-1==(conn_sock=accept(sockfd,(struct sockaddr*)&client,&length)))
+		{
+			perror("three shakehands error\n");
+			close(sockfd);
+			return -1;		
 		}
 
-		while (1) {
-			memset(recv_buf, 0, MAX_SIZE);
-			memset(send_buf, 0, MAX_SIZE);
+		/* the commnication with client */
+		pid_t cpid;
+		if(cpid=fork()==0){
+		while(1)
+		{
+			
+			memset(recvbuf,0,BUFSIZE);
+			memset(sendbuf,0,BUFSIZE);
 
-			if ((recvnum =
-			     recv(connectd, recv_buf, 2045, 0)) < 0) {
-				printf("recv data error\n");
-				break;
+			if (0>=(recvnum=read(conn_sock,recvbuf,BUFSIZE)))
+			{
+				perror("the commucation error\n");
+				close(conn_sock);
+				close(sockfd);
+				return -1;
+			}
+			recvbuf[recvnum]='\0';
+
+			fprintf(stderr,"the command is:%s\n",recvbuf);
+
+			if (0==strcmp(recvbuf,"quit"))
+			{
+				fprintf(stderr,"the client is quit\n");
+				close(conn_sock);
+				break;			
 			}
 
-			recv_buf[recvnum] = '\0';
-
-			printf("the message is: %s\n", recv_buf);
-
-			if (strcmp(recv_buf, "quit\n") == 0) {
-				printf("quitting remote controling\n");
-				break;
+			if (1>=(cnt=execute(recvbuf,sendbuf)))
+			{
+				sprintf(sendbuf,"the invalid command,please try again\n");
+											
 			}
 
-			strcpy(cmd, "sh -c ");
-			strcat(cmd, recv_buf);
-			execute(cmd, send_buf);
 
-			printf("the server message is: %s\n", send_buf);
+			fprintf(stderr,"the result is \n%s",sendbuf);
 
-			if (send(connectd, send_buf, 2045, 0) < 0) {
-				printf("sending data error\n");
-				break;
+			if (0>=(sendnum=write(conn_sock,sendbuf,strlen(sendbuf))))
+			{
+				perror("the commucation error\n");
+				close(sockfd);
+				close(conn_sock);
+				return -1;
+			
 			}
+		
 		}
-		close(connectd);
+	}else if(cpid>0){
+		close(conn_sock);
+		continue;
+	}
 	}
 
-	close(listend);
-	exit(1);
+	close(sockfd);
 }
+
+

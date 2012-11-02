@@ -1,78 +1,123 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  tcpclient.c
+ *
+ *    Description:  This progarm is demostrate to how to write a tcp remote control client
+ *
+ *        Version:  1.0
+ *        Created:  2010年09月11日 22时32分49秒
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Gang Liang (cs.scu.edu.cn/~lianggang), lianggang@scu.edu.cn
+ *        Company:  Sichuan university
+ *
+ * =====================================================================================
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <string.h>
-#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 
-#define PORT 8964
-#define MAX_SIZE 2048
+#define PORT 8900
+#define BUFSIZE 2048
 
-int main(int argc, char **argv)
+
+void printusage(char*command)
 {
-	struct sockaddr_in server;
-	int port;
+	if (NULL==command)
+		exit(-1);
+	
+	fprintf(stderr,"the useage of %s :",command);
+	fprintf(stderr,"%s IPADDR\n",command);
+	
+	return;
+
+}
+
+
+int main(int argc,char** argv)
+{
 	int sockfd;
-	int sendnum;
+	int length;
+	struct sockaddr_in server;
+	int sndnum;
 	int recvnum;
-	char send_buf[MAX_SIZE];
-	char recv_buf[MAX_SIZE];
+	char sendbuf[BUFSIZE];
+	char recvbuf[BUFSIZE];
+	
+	sockfd=-1;
+	length=0;
 
-	if (argc != 2) {
-		printf("\n");
-		exit(-1);
+	if (2!=argc)
+	{
+		printusage(argv[0]);
+		return -1;
 	}
 
-	port = PORT;
 
-	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		printf("create socket error\n");
-		exit(-1);
+	if (-1==(sockfd=socket(AF_INET,SOCK_STREAM,0)))
+	{
+		perror("create socket error\n");
+		return -1;
 	}
 
-	memset(&server, 0, sizeof(server));
-	server.sin_family = AF_INET;
+
+	memset(&server,0,sizeof(server));
+	server.sin_family=AF_INET;
 	server.sin_addr.s_addr = inet_addr(argv[1]);
-	server.sin_port = htons(port);
+	server.sin_port = htons(PORT);
 
-	if (connect
-	    (sockfd, (struct sockaddr *) &server,
-	     sizeof(struct sockaddr)) < 0) {
-		printf("connect error\n");
+	if (-1==connect(sockfd,(struct sockaddr*)&server,sizeof(server)))
+	{
+		perror("connect error\n");
 		close(sockfd);
-		exit(1);
+		return -1;
+
 	}
 
-	while (1) {
-		memset(send_buf, 0, MAX_SIZE);
-		memset(recv_buf, 0, MAX_SIZE);
 
-		printf("say to tcp server>");
-		fgets(send_buf, 2045, stdin);
-		printf("\n");
+	while(1)
 
-		if (send(sockfd, send_buf, 2045, 0) < 0) {
-			printf("send data error\n");
+	{
+		fprintf(stderr,"TCP>");
+		
+		memset(recvbuf,0,BUFSIZE);
+		memset(sendbuf,0,BUFSIZE);
+		fgets(sendbuf,BUFSIZE,stdin);
+		length=strlen(sendbuf);
+		sendbuf[length-1]='\0';
+
+		if (0>=(sndnum=write(sockfd,sendbuf,strlen(sendbuf))))
+		{
+			perror("send error\n");
 			close(sockfd);
 			exit(-1);
 		}
 
-		if (strcmp(send_buf, "quit\n") == 0) {
-			printf("quit server\n");
-			break;
+		if (0==strcmp(sendbuf,"quit"))
+		{
+			fprintf(stderr,"quit...\n");
+			close(sockfd);
+			exit(0);
 		}
 
-		if ((recvnum = recv(sockfd, recv_buf, 2045, 0)) < 0) {
-			printf("recive data error\n");
+		if (0>=(recvnum=read(sockfd,recvbuf,BUFSIZE)))
+		{
+			perror("read error\n");
 			close(sockfd);
 			exit(-1);
 		}
-
-		recv_buf[recvnum] = '\0';
-		fprintf(stdout, "%s\n", recv_buf);
+		
+		recvbuf[recvnum]='\0';
+		fprintf(stderr,"the result:\n");
+		fprintf(stderr,"%s\n",recvbuf);
+			
 	}
-	close(sockfd);
-	exit(1);
+
 }
