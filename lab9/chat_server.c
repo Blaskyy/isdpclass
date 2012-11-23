@@ -1,4 +1,4 @@
-/*	linux-socket-select-“Ï≤Ω¡ƒÃÏ “
+/*	linux-socket-select-ÂºÇÊ≠•ËÅäÂ§©ÂÆ§
 	talk_server.c
 	writed by hanzhongqiu 13/04/2009
 	Using select() for I/O multiplexing 
@@ -24,6 +24,7 @@ struct client_info
 	int client_id;
 	char client_name[256];
 	int is_first;
+    int is_hide;
 };
 
 int main()
@@ -132,6 +133,7 @@ int main()
 					newfd = accept(sockfd, (struct sockaddr*)&client_addr, &size);
 					clientinfo[newfd].client_id = newfd;
 					clientinfo[newfd].is_first = 1;
+                    clientinfo[newfd].is_hide = 0;
 					if (-1 == newfd)
 					{
 						perror("accept() error:");
@@ -180,13 +182,22 @@ int main()
 										}
 									}// end for
 								} // end quit
+                                if (0 == strcmp(data_buf, "/hide\n")){
+                                    clientinfo[tmp_i].is_hide = 1;
+                                }
+                                if (0 == strcmp(data_buf, "/online\n")){
+                                    clientinfo[tmp_i].is_hide = 0;
+                                }
 								if (strcmp(data_buf, "/who\n")==0){
 
 								for(tmp_fd = sockfd;tmp_fd<=max_fd;tmp_fd++)
 								{
-									if (FD_ISSET(tmp_fd, &master_fds))
-										strcat(send_buf, clientinfo[tmp_fd].client_name);
-								}
+									if (FD_ISSET(tmp_fd, &master_fds)){
+                                        if(clientinfo[tmp_fd].is_hide == 1)
+                                            continue;
+                                        strcat(send_buf, clientinfo[tmp_fd].client_name);
+                                    }
+                                }
 								write(tmp_i, send_buf, sizeof(send_buf));
 								continue;
 								} //end who

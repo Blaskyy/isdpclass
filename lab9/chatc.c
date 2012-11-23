@@ -75,13 +75,12 @@ int main(int argc, char *argv[])
 	fprintf(stdout, "client ok!\n");
 	fflush(stdout);
 
-
     while (1)
     {
 		memset(recv_buf, 0, sizeof(recv_buf));
 		memset(send_buf, 0, sizeof(send_buf));
 		select( sockfd+1, &sockset, NULL, NULL, NULL); 
-		if (FD_ISSET( sockfd, &sockset)) 
+		if (FD_ISSET( sockfd, &sockset))
 		{
 			if (-1 == (recvbytes =read(sockfd, recv_buf, sizeof(recv_buf))))
 			{
@@ -93,23 +92,26 @@ int main(int argc, char *argv[])
 			printf("%s\n", recv_buf);
 			fflush(stdout);
 		}
+		
 		if ( FD_ISSET( 0, &sockset)) 
 		{
 			fgets(send_buf, sizeof(send_buf), stdin);
 			data_len = strlen(send_buf);
 			//send_buf[data_len - 1] = '\0';
 			send_buf[data_len] = '\0';
-
+            
 			if(strcmp(send_buf,"/help\n")==0)
        		{
-				//´¦Àí£¬ÊäÈë"/help"±íÊ¾ÏëÒªµÃµ½°ïÖúĞÅÏ¢£¬°ïÖúĞÅÏ¢ÊÇ´æ´¢ÔÚ¿Í»§¶ËµÄ£¬²»ÓÃÏò·şÎñÆ÷·¢ËÍĞÅÏ¢
+				//å¤„ç†ï¼Œè¾“å…¥"/help"è¡¨ç¤ºæƒ³è¦å¾—åˆ°å¸®åŠ©ä¿¡æ¯ï¼Œå¸®åŠ©ä¿¡æ¯æ˜¯å­˜å‚¨åœ¨å®¢æˆ·ç«¯çš„ï¼Œä¸ç”¨å‘æœåŠ¡å™¨å‘é€ä¿¡æ¯
 				printf("\n");
 				fprintf(stderr,"/help show the help message\n");
 				fprintf(stderr,"/send usage:/send user message to send message to user\n");
 				fprintf(stderr,"/who show who is online\n");
+                fprintf(stderr,"/hide hide you");
+                fprintf(stderr,"/online  unhide you");
 				fprintf(stderr,"/quit quit from server\n");
 				continue;
-				//Ìø¹ı¼ÌĞøÖ´ĞĞÑ­»·
+				//è·³è¿‡ç»§ç»­æ‰§è¡Œå¾ªç¯
        		}
        		
 			//send the content
@@ -127,7 +129,8 @@ int main(int argc, char *argv[])
 				exit(1);
 			}
 		}
-			//ÖØĞÂÉèÖÃ sockset. (¼´½« sockset Çå¿Õ, ²¢½« sockfd ºÍ 0 ¼ÓÈë) 
+		
+			//é‡æ–°è®¾ç½® sockset. (å³å°† sockset æ¸…ç©º, å¹¶å°† sockfd å’Œ 0 åŠ å…¥) 
 			FD_ZERO(&sockset);
 			FD_SET(sockfd, &sockset);
 			FD_SET(0, &sockset);
