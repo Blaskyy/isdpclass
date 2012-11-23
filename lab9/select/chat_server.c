@@ -22,7 +22,8 @@
 struct client_info
 {
 	int client_id;
-	struct sockaddr_in client_address;
+	char client_name[256];
+	int is_first;
 };
 
 int main()
@@ -49,20 +50,23 @@ int main()
 	/*for set socket option*/
 	int opt;
 	opt = SO_REUSEADDR;
-    /*lenth of address*/
-	int addr_len;
 	/*for accept() to use*/
 	int size;
 	size = sizeof(struct sockaddr);
 	/*temple varient*/
 	int tmp_i, tmp_j;
+	char str1[256];
+	char str2[256];
+	char str3[256];
+	int tmpid=-1;
+	int tmpfd=-1;
 	struct client_info clientinfo[BACKLOG];
 	
 	/*clear the master and temple file descriptor*/
 	FD_ZERO(&master_fds);
 	FD_ZERO(&read_fds);
 	
-  memset(&data_buf, 0, BUFSIZE);
+	memset(&data_buf, 0, BUFSIZE);
 	memset(&send_buf, 0, BUFSIZE);
 
 	/*create socket*/
@@ -79,6 +83,15 @@ int main()
     }
 	/*bind first config the socket then binding*/
 	memset(&server_addr, 0, size);
+
+	int i;
+	for(i=0;i<BACKLOG;i++)
+	{
+		clientinfo[i].client_id = -1;
+		clientinfo[i].client_name[0] = '\0';
+		clientinfo[i].is_first = -1;
+	}
+	
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(SERVERPORT);
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -118,7 +131,7 @@ int main()
 				{
 					newfd = accept(sockfd, (struct sockaddr*)&client_addr, &size);
 					clientinfo[newfd].client_id = newfd;
-					clientinfo[newfd].client_address.sin_addr = client_addr.sin_addr;
+					clientinfo[newfd].is_first = 1;
 					if (-1 == newfd)
 					{
 						perror("accept() error:");
@@ -131,41 +144,89 @@ int main()
 						{
 							max_fd = newfd;
 						}
-						printf("Get the new connect from %s\n", inet_ntoa(client_addr.sin_addr));
 					}
 				}
 				else
 				{/*get data from the client*/
 							nbytes = read(tmp_i, data_buf, sizeof(data_buf));
+							if (clientinfo[tmp_i].is_first == 1)
+							{
+								strcpy(clientinfo[tmp_i].client_name, data_buf);
+								clientinfo[tmp_i].is_first = -1;
+								printf("Get the new connect from %s\n", clientinfo[tmp_i].client_name);
+							}
 							if (0 > nbytes)
 							{
 								perror("recv() error:");
 								exit(1);
 							}
-							else if(nbytes == 0 || (0 == strcmp(data_buf, "exit")))
-							{	
-								printf("client: %s exit!\n", inet_ntoa(clientinfo[tmp_i].client_address.sin_addr));
-								FD_CLR(tmp_i, &master_fds);
-								close(tmp_i);
-								strcat(send_buf, inet_ntoa(clientinfo[tmp_i].client_address.sin_addr));
-								strcat(send_buf, "  was exit!");
-								for (tmp_j = sockfd + 1; tmp_j <= max_fd; tmp_j++)
+							else if (data_buf[0]=='/'){
+								if(0 == strcmp(data_buf, "/quit"))
 								{
-									if (FD_ISSET(tmp_j, &master_fds))
+									printf("client: %s exit!\n", clientinfo[tmp_i].client_name);
+									FD_CLR(tmp_i, &master_fds);
+									close(tmp_i);
+									strcat(send_buf, clientinfo[tmp_i].client_name);
+									strcat(send_buf, "  was exit!");
+									for (tmp_j = sockfd + 1; tmp_j <= max_fd; tmp_j++)
+									{
+										if (FD_ISSET(tmp_j, &master_fds))
+										{
+
+											if (-1 == write(tmp_j, send_buf, nbytes))
+											{
+												perror("send data error:");
+											}
+										}
+									}// end for
+								} // end quit
+								if (strcmp(data_buf, "/who\n")==0){
+
+								for(tmpfd = sockfd;tmpfd<=max_fd;tmpfd++)
+								{
+									if (FD_ISSET(tmpfd, &master_fds))
+										strcat(send_buf, clientinfo[tmpfd].client_name);
+								}
+								write(tmp_i, send_buf, sizeof(send_buf));
+								continue;
+								} //end who
+
+								memset(str1, 0, sizeof(str1));
+								memset(str2, 0, sizeof(str2));
+								memset(str3, 0, sizeof(str3));
+								sscanf(data_buf, "%s %s %s", str1, str2, str3);
+								strcat(str2, "\n");
+								if (strcmp(str1, "/send")==0)
+								{
+									tmpid = -1;
+									int j = 0;
+									for(tmpfd = sockfd;tmpfd<=max_fd;tmpfd++)
 									{
 
-										if (-1 == write(tmp_j, send_buf, nbytes))
+										if (FD_ISSET(tmpfd, &master_fds))
 										{
-											perror("send data error:");
+											if (strcmp(str2, clientinfo[tmpfd].client_name)==0)
+												tmpid = tmpfd;
 										}
 									}
-								}// end for
+									if (tmpid==-1)
+									{
+										strcat(send_buf, "user isn't online!");
+										write(tmp_i, send_buf, sizeof(send_buf));
+										continue;
+									}
+									strcat(send_buf, clientinfo[tmp_i].client_name);
+									strcat(send_buf, str3);
+
+									write(tmpid, send_buf, sizeof(send_buf));
+									continue;
+								} //end send
 							}
 							else
 							{
 								printf("get data:%s from the client :", data_buf);
-								printf("%s\n", inet_ntoa(clientinfo[tmp_i].client_address.sin_addr));
-								strcat(send_buf, inet_ntoa(clientinfo[tmp_i].client_address.sin_addr));
+								printf("%s\n", clientinfo[tmp_i].client_name);
+								strcat(send_buf, clientinfo[tmp_i].client_name);
 								strcat(send_buf, " said:  ");
 								strcat(send_buf, data_buf);
 								for (tmp_j = sockfd + 1; tmp_j <= max_fd; tmp_j++)

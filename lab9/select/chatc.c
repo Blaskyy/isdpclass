@@ -97,7 +97,21 @@ int main(int argc, char *argv[])
 		{
 			fgets(send_buf, sizeof(send_buf), stdin);
 			data_len = strlen(send_buf);
-			send_buf[data_len - 1] = '\0';
+			//send_buf[data_len - 1] = '\0';
+			send_buf[data_len] = '\0';
+
+			if(strcmp(send_buf,"/help\n")==0)
+       		{
+				//处理，输入"/help"表示想要得到帮助信息，帮助信息是存储在客户端的，不用向服务器发送信息
+				printf("\n");
+				fprintf(stderr,"/help show the help message\n");
+				fprintf(stderr,"/send usage:/send user message to send message to user\n");
+				fprintf(stderr,"/who show who is online\n");
+				fprintf(stderr,"/quit quit from server\n");
+				continue;
+				//跳过继续执行循环
+       		}
+       		
 			//send the content
 			if (-1 == write(sockfd, send_buf, sizeof(send_buf)))
 			{
@@ -106,7 +120,7 @@ int main(int argc, char *argv[])
 				exit(1);
 			} 
 			//quit the chat room
-			if (0 == strcmp(send_buf, "exit"))
+			if (0 == strcmp(send_buf, "/quit"))
 			{
 				printf("quiting from chat room!\n");
 				close(sockfd);
