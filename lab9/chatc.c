@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 				exit(1);
 			} 
 			//quit the chat room
-			if (0 == strcmp(send_buf, "/quit"))
+			if (0 == strcmp(send_buf, "/quit\n"))
 			{
 				printf("quiting from chat room!\n");
 				close(sockfd);

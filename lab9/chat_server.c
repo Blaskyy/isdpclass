@@ -58,8 +58,8 @@ int main()
 	char str1[256];
 	char str2[256];
 	char str3[256];
-	int tmpid=-1;
-	int tmpfd=-1;
+	int tmp_id=-1;
+	int tmp_fd=-1;
 	struct client_info clientinfo[BACKLOG];
 	
 	/*clear the master and temple file descriptor*/
@@ -161,7 +161,7 @@ int main()
 								exit(1);
 							}
 							else if (data_buf[0]=='/'){
-								if(0 == strcmp(data_buf, "/quit"))
+								if(0 == strcmp(data_buf, "/quit\n"))
 								{
 									printf("client: %s exit!\n", clientinfo[tmp_i].client_name);
 									FD_CLR(tmp_i, &master_fds);
@@ -182,10 +182,10 @@ int main()
 								} // end quit
 								if (strcmp(data_buf, "/who\n")==0){
 
-								for(tmpfd = sockfd;tmpfd<=max_fd;tmpfd++)
+								for(tmp_fd = sockfd;tmp_fd<=max_fd;tmp_fd++)
 								{
-									if (FD_ISSET(tmpfd, &master_fds))
-										strcat(send_buf, clientinfo[tmpfd].client_name);
+									if (FD_ISSET(tmp_fd, &master_fds))
+										strcat(send_buf, clientinfo[tmp_fd].client_name);
 								}
 								write(tmp_i, send_buf, sizeof(send_buf));
 								continue;
@@ -198,18 +198,18 @@ int main()
 								strcat(str2, "\n");
 								if (strcmp(str1, "/send")==0)
 								{
-									tmpid = -1;
+									tmp_id = -1;
 									int j = 0;
-									for(tmpfd = sockfd;tmpfd<=max_fd;tmpfd++)
+									for(tmp_fd = sockfd;tmp_fd<=max_fd;tmp_fd++)
 									{
 
-										if (FD_ISSET(tmpfd, &master_fds))
+										if (FD_ISSET(tmp_fd, &master_fds))
 										{
-											if (strcmp(str2, clientinfo[tmpfd].client_name)==0)
-												tmpid = tmpfd;
+											if (strcmp(str2, clientinfo[tmp_fd].client_name)==0)
+												tmp_id = tmp_fd;
 										}
 									}
-									if (tmpid==-1)
+									if (tmp_id==-1)
 									{
 										strcat(send_buf, "user isn't online!");
 										write(tmp_i, send_buf, sizeof(send_buf));
@@ -218,7 +218,7 @@ int main()
 									strcat(send_buf, clientinfo[tmp_i].client_name);
 									strcat(send_buf, str3);
 
-									write(tmpid, send_buf, sizeof(send_buf));
+									write(tmp_id, send_buf, sizeof(send_buf));
 									continue;
 								} //end send
 							}
