@@ -166,8 +166,6 @@ int main()
 								if(0 == strcmp(data_buf, "/quit\n"))
 								{
 									printf("client: %s exit!\n", clientinfo[tmp_i].client_name);
-									FD_CLR(tmp_i, &master_fds);
-									close(tmp_i);
 									strcat(send_buf, clientinfo[tmp_i].client_name);
 									strcat(send_buf, "  was exit!");
 									for (tmp_j = sockfd + 1; tmp_j <= max_fd; tmp_j++)
@@ -181,6 +179,8 @@ int main()
 											}
 										}
 									}// end for
+									FD_CLR(tmp_i, &master_fds);
+									close(tmp_i);
 								} // end quit
                                 if (0 == strcmp(data_buf, "/hide\n")){
                                     clientinfo[tmp_i].is_hide = 1;

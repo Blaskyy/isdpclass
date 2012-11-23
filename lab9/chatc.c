@@ -113,7 +113,23 @@ int main(int argc, char *argv[])
 				continue;
 				//跳过继续执行循环
        		}
-       		
+			//quit the chat room
+			if (0 == strcmp(send_buf, "/quit\n"))
+			{
+				printf("quiting from chat room!\n");
+			    if (-1 == write(sockfd, send_buf, sizeof(send_buf)))
+			    {
+				    perror("send data error:");
+				    close(sockfd);
+				    exit(1);
+			    } 
+				close(sockfd);
+				exit(1);
+			}
+
+			// check who is hide
+			
+			
 			//send the content
 			if (-1 == write(sockfd, send_buf, sizeof(send_buf)))
 			{
@@ -121,13 +137,7 @@ int main(int argc, char *argv[])
 				close(sockfd);
 				exit(1);
 			} 
-			//quit the chat room
-			if (0 == strcmp(send_buf, "/quit\n"))
-			{
-				printf("quiting from chat room!\n");
-				close(sockfd);
-				exit(1);
-			}
+
 		}
 		
 			//重新设置 sockset. (即将 sockset 清空, 并将 sockfd 和 0 加入) 
@@ -139,5 +149,3 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-
-
