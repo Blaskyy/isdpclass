@@ -1,13 +1,13 @@
 /************************************************************************\
-*                                                                       *\
-*           name:Chat client                                            *\
-*         author:Liang Gang & Hu Xiao-qin                               *\
-*       function:a program that in charge of chat relay                 *\
-*           note:this program is based on the program which is write by *\
-*                Mr Han zhong-qiu,and this program is a bit stronger    *\
-*                than that program.                                     *\
-*           date:04-18-2009                                             *\
-*                                                                       *\
+*																	   *\
+*		   name:Chat client											*\
+*		 author:Liang Gang & Hu Xiao-qin							   *\
+*	   function:a program that in charge of chat relay				 *\
+*		   note:this program is based on the program which is write by *\
+*				Mr Han zhong-qiu,and this program is a bit stronger	*\
+*				than that program.									 *\
+*		   date:04-18-2009											 *\
+*																	   *\
 *************************************************************************/
 
 #include <stdio.h>
@@ -66,17 +66,16 @@ int main(int argc, char *argv[])
 		close(sockfd);
 		exit(1);
 	}
-	
-	
-  FD_ZERO(&sockset); 
+
+	FD_ZERO(&sockset); 
 	FD_SET(sockfd, &sockset); 
 	FD_SET(0, &sockset); 
 	
 	fprintf(stdout, "client ok!\n");
 	fflush(stdout);
 
-    while (1)
-    {
+	while (1)
+	{
 		memset(recv_buf, 0, sizeof(recv_buf));
 		memset(send_buf, 0, sizeof(send_buf));
 		select( sockfd+1, &sockset, NULL, NULL, NULL); 
@@ -99,45 +98,44 @@ int main(int argc, char *argv[])
 			data_len = strlen(send_buf);
 			//send_buf[data_len - 1] = '\0';
 			send_buf[data_len] = '\0';
-            
+	
 			if(strcmp(send_buf,"/help\n")==0)
-       		{
+	   		{
 				//处理，输入"/help"表示想要得到帮助信息，帮助信息是存储在客户端的，不用向服务器发送信息
 				printf("\n");
 				fprintf(stderr,"/help show the help message\n");
 				fprintf(stderr,"/send usage:/send user message to send message to user\n");
 				fprintf(stderr,"/who show who is online\n");
-                fprintf(stderr,"/hide hide you");
-                fprintf(stderr,"/online  unhide you");
+				fprintf(stderr,"/hide hide you");
+				fprintf(stderr,"/online  unhide you");
 				fprintf(stderr,"/quit quit from server\n");
 				continue;
 				//跳过继续执行循环
-       		}
+			}
 			//quit the chat room
 			if (0 == strcmp(send_buf, "/quit\n"))
 			{
 				printf("quiting from chat room!\n");
-			    if (-1 == write(sockfd, send_buf, sizeof(send_buf)))
-			    {
-				    perror("send data error:");
-				    close(sockfd);
-				    exit(1);
-			    } 
+				if (-1 == write(sockfd, send_buf, sizeof(send_buf)))
+				{
+					perror("send data error:");
+					close(sockfd);
+					exit(1);
+				}
 				close(sockfd);
 				exit(1);
 			}
 
 			// check who is hide
-			
-			
+
+
 			//send the content
 			if (-1 == write(sockfd, send_buf, sizeof(send_buf)))
 			{
 				perror("send data error:");
 				close(sockfd);
 				exit(1);
-			} 
-
+			}
 		}
 		
 			//重新设置 sockset. (即将 sockset 清空, 并将 sockfd 和 0 加入) 

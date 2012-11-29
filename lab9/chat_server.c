@@ -24,7 +24,7 @@ struct client_info
 	int client_id;
 	char client_name[256];
 	int is_first;
-    int is_hide;
+	int is_hide;
 };
 
 int main()
@@ -77,11 +77,11 @@ int main()
 		exit(1);
 	}
 	/*set the socket*/
-    if (-1 == setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
-    {
+	if (-1 == setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+	{
 			perror("setsockopt() error:");
 			exit(1);
-    }
+	}
 	/*bind first config the socket then binding*/
 	memset(&server_addr, 0, size);
 
@@ -133,7 +133,7 @@ int main()
 					newfd = accept(sockfd, (struct sockaddr*)&client_addr, &size);
 					clientinfo[newfd].client_id = newfd;
 					clientinfo[newfd].is_first = 1;
-                    clientinfo[newfd].is_hide = 0;
+					clientinfo[newfd].is_hide = 0;
 					if (-1 == newfd)
 					{
 						perror("accept() error:");
@@ -172,7 +172,6 @@ int main()
 									{
 										if (FD_ISSET(tmp_j, &master_fds))
 										{
-
 											if (-1 == write(tmp_j, send_buf, nbytes))
 											{
 												perror("send data error:");
@@ -182,22 +181,22 @@ int main()
 									FD_CLR(tmp_i, &master_fds);
 									close(tmp_i);
 								} // end quit
-                                if (0 == strcmp(data_buf, "/hide\n")){
-                                    clientinfo[tmp_i].is_hide = 1;
-                                }
-                                if (0 == strcmp(data_buf, "/online\n")){
-                                    clientinfo[tmp_i].is_hide = 0;
-                                }
+								if (0 == strcmp(data_buf, "/hide\n")){
+									clientinfo[tmp_i].is_hide = 1;
+								}
+								if (0 == strcmp(data_buf, "/online\n")){
+									clientinfo[tmp_i].is_hide = 0;
+								}
 								if (strcmp(data_buf, "/who\n")==0){
 
 								for(tmp_fd = sockfd;tmp_fd<=max_fd;tmp_fd++)
 								{
 									if (FD_ISSET(tmp_fd, &master_fds)){
-                                        if(clientinfo[tmp_fd].is_hide == 1)
-                                            continue;
-                                        strcat(send_buf, clientinfo[tmp_fd].client_name);
-                                    }
-                                }
+										if(clientinfo[tmp_fd].is_hide == 1)
+											continue;
+										strcat(send_buf, clientinfo[tmp_fd].client_name);
+									}
+								}
 								write(tmp_i, send_buf, sizeof(send_buf));
 								continue;
 								} //end who
@@ -213,7 +212,6 @@ int main()
 									int j = 0;
 									for(tmp_fd = sockfd;tmp_fd<=max_fd;tmp_fd++)
 									{
-
 										if (FD_ISSET(tmp_fd, &master_fds))
 										{
 											if (strcmp(str2, clientinfo[tmp_fd].client_name)==0)
@@ -244,7 +242,6 @@ int main()
 								{
 									if (FD_ISSET(tmp_j, &master_fds))
 									{
-
 										if (-1 == write(tmp_j, send_buf, nbytes))
 										{
 											perror("send data error:");
@@ -259,7 +256,7 @@ int main()
 			}//end if
 		}//end for 
 
-    memset(&data_buf, 0, BUFSIZE);
+	memset(&data_buf, 0, BUFSIZE);
 	memset(&send_buf, 0, BUFSIZE);
 	//FD_ZERO(&master_fds);
 	//FD_SET(sockfd, &master_fds);
