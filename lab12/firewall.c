@@ -1,6 +1,7 @@
 /*
  * This code is GPL.
  */
+#include <netinet/in.h>
 #include <linux/netfilter.h>
 #include <libipq.h>
 #include <stdio.h>
