@@ -5,6 +5,7 @@
 #include <linux/netfilter.h>
 #include <libipq.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include<netinet/ip.h>
 #define BUFSIZE 2048 
 
@@ -48,7 +49,7 @@ int main(int argc, char **argv)
 				daddr.s_addr = iphead->daddr;
 				dest = inet_ntoa(daddr);
 
-				if(strcmp(dest, "192.168.254.1") == 0)
+				if(strcmp(dest, "202.115.47.141") == 0)
 				{
 					status = ipq_set_verdict(h,m->packet_id,
 							NF_ACCEPT,0,NULL);
