@@ -12,8 +12,8 @@
 #define LENGTH 4096
 
 static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_data *nfa, void *data){
-    int id = 0, pdata_len;
-    unsigned char *pdata;
+    int id = 0, pload_len;
+    unsigned char *pload;
     struct nfqnl_msg_packet_hdr *ph;
 
     //get unique ID of packet in queue
@@ -23,9 +23,9 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_data *
     }
 
     //get payload
-    pdata_len = nfq_get_payload(nfa, &pdata);
-    if(pdata_len == -1) {
-        pdata_len = 0;
+    pload_len = nfq_get_payload(nfa, &pload);
+    if(pload_len == -1) {
+        pload_len = 0;
     }
 
     /* get the dest addr of this packet;
@@ -33,8 +33,8 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_data *
      * if they are the same,then return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL)
      * else return nfq_set_verdict(qh, id, NF_DROP, 0, NULL)
      */
-    struct iphdr *iphdrp = (struct iphdr *)pdata;
-    if(iphdrp->daddr == inet_addr(TO)){
+    struct iphdr *ip_head = (struct iphdr *)pload;
+    if(ip_head->daddr == inet_addr(TO)){
         printf("Access ping to ");
         printf(TO);
         printf("\n");
