@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <netdb.h>
 #include <netinet/in.h>
 #include <linux/netfilter.h>
-#include <linux/ip.h>
+#include <netinet/ip.h>
 
 #include <libnetfilter_queue/libnetfilter_queue.h>
 

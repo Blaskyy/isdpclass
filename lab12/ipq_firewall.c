@@ -6,8 +6,10 @@
 #include <libipq.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include<netinet/ip.h>
+#include <netinet/ip.h>
+
 #define BUFSIZE 2048 
+#define TO "114.114.114.114"
 
 static void die(struct ipq_handle *h)
 {
@@ -46,10 +48,8 @@ int main(int argc, char **argv)
 				char *dest = NULL;
 				struct in_addr daddr;
 				iphead = (struct iphdr *)m->payload;
-				daddr.s_addr = iphead->daddr;
-				dest = inet_ntoa(daddr);
 
-				if(strcmp(dest, "202.115.47.141") == 0)
+				if(iphead->daddr == inet_addr(TO))
 				{
 					status = ipq_set_verdict(h,m->packet_id,
 							NF_ACCEPT,0,NULL);
