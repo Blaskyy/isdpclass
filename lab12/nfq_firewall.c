@@ -70,7 +70,7 @@ int main(int argc, const char *argv[])
         exit(1);
     }
 
-    //binding this socket to queue 
+    //binding this socket to queue '0'
     qh = nfq_create_queue(h, 0, &cb, NULL);
     if(!qh) {
         fprintf(stderr,"error during nfq_create_queue()\n");
